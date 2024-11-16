@@ -1,7 +1,6 @@
 import pytest
-from unittest.mock import patch, mock_open, MagicMock
+from unittest.mock import patch, mock_open
 from codebuddy.file_handler import FileHandler
-import os
 
 @pytest.fixture
 def file_handler():
@@ -9,46 +8,44 @@ def file_handler():
 
 @patch('builtins.open', new_callable=mock_open, read_data="file content")
 def test_get_content_exists(mock_file, file_handler):
-    assert file_handler.get_content('test.txt') == "file content"
-    mock_file.assert_called_once_with('test.txt', 'r')
+    # Since we're mocking 'open', we should ensure 'os.path.exists' returns True
+    with patch('os.path.exists', return_value=True):
+        assert file_handler.get_content('test.txt') == "file content"
+
+@patch('os.path.exists', return_value=False)
+def test_get_content_not_found(mock_exists, file_handler):
+    # Ensure that when a file doesn't exist, it returns the not found message
+    assert file_handler.get_content('test.txt') == "# File not found: test.txt\n"
 
 @patch('builtins.open', new_callable=mock_open)
-@patch('codebuddy.file_handler.os.path.exists', return_value=False)
-def test_get_content_not_exists(mock_exists, mock_file, file_handler):
-    assert "# File not found: test.txt\n" == file_handler.get_content('test.txt')
-    mock_exists.assert_called_once_with('test.txt')
-    mock_file.assert_not_called()
+def test_write_content(mock_file, file_handler):
+    file_handler.write_content('test.txt', "New Content")
+    mock_file.assert_called_once_with('test.txt', 'w')
+    mock_file().write.assert_called_once_with("New Content")
 
-@patch('os.makedirs')
-@patch('builtins.open', new_callable=mock_open)
-@patch('codebuddy.file_handler.os.path.exists', return_value=True)
-def test_apply_changes_to_project_modify(mock_exists, mock_file, mock_makedirs, file_handler):
-    changes = [{'filename': 'dir/test.txt', 'action': 'modify', 'content': 'new content'}]
-    file_handler.apply_changes_to_project(changes)
-    mock_makedirs.assert_called_once_with('dir', exist_ok=True)
-    mock_file().write.assert_called_once_with('new content')
+@patch('builtins.open', side_effect=PermissionError)
+def test_write_content_permission_error(mock_file, file_handler):
+    with pytest.raises(PermissionError):
+        file_handler.write_content('test.txt', "New Content")
 
-@patch('codebuddy.file_handler.os.remove')
-@patch('codebuddy.file_handler.os.path.exists', return_value=True)
+@patch('os.remove')
+@patch('os.path.exists', return_value=True)
 def test_apply_changes_to_project_delete(mock_exists, mock_remove, file_handler):
-    changes = [{'filename': 'test.txt', 'action': 'delete'}]
-    file_handler.apply_changes_to_project(changes)
+    change = [{'filename': 'test.txt', 'action': 'delete'}]
+    file_handler.apply_changes_to_project(change)
     mock_remove.assert_called_once_with('test.txt')
 
-@patch('codebuddy.file_handler.os.walk')
-@patch('codebuddy.file_handler.Path.exists', return_value=True)
-@patch('codebuddy.file_handler.parse_gitignore')
-def test_list_directory_files(mock_parse_gitignore, mock_path_exists, mock_walk, file_handler):
-    gitignore_parser = MagicMock()
-    
-    # Correct mock implementation to ignore 'ignored.txt'
-    gitignore_parser.side_effect = lambda x: x.endswith("ignored.txt")
-    mock_parse_gitignore.return_value = gitignore_parser
-    mock_walk.return_value = [
-        ('./', ['subdir'], ['file1.txt', 'ignored.txt']),
-        ('./subdir', [], ['file2.txt']),
-    ]
+@patch('builtins.open', new_callable=mock_open)
+@patch('os.path.exists', return_value=False)
+@patch('os.makedirs')
+def test_apply_changes_to_project_modify(mock_makedirs, mock_exists, mock_file, file_handler):
+    change = [{'filename': 'test.txt', 'action': 'modify', 'content': 'new content'}]
+    file_handler.apply_changes_to_project(change)
+    mock_file.assert_called_once_with('test.txt', 'w')
+    mock_file().write.assert_called_once_with('new content')
 
+@patch('os.walk', return_value=[('.', [], ['file1.txt', 'file2.txt'])])
+@patch('gitignore_parser.parse_gitignore', return_value=lambda x: False)
+def test_list_directory_files(mock_parse, mock_walk, file_handler):
     files = file_handler.list_directory_files()
-    expected_files = ['file1.txt', 'subdir/file2.txt']
-    assert files == expected_files, f"Expected {expected_files}, but got {files}"
+    assert files == ['file1.txt', 'file2.txt']

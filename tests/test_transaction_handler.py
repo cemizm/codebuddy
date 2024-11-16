@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 from codebuddy.transaction_handler import TransactionHandler
 import subprocess
-
+import os
 
 @pytest.fixture
 def handler():
@@ -57,3 +57,17 @@ def test_has_changes_failure(mock_run, handler):
     mock_run.side_effect = subprocess.CalledProcessError(1, 'git status', "Error")
     with pytest.raises(RuntimeError, match="Failed to check for changes"):
         handler._has_changes()
+
+@patch('codebuddy.transaction_handler.subprocess.run')
+def test_initialize_git_repo_when_missing(mock_run):
+    """Test if Git repo is initialized when it's missing."""
+    with patch('os.path.isdir', return_value=False):
+        TransactionHandler()
+        mock_run.assert_called_with(["git", "init"], check=True, capture_output=True, text=True)
+  
+@patch('codebuddy.transaction_handler.subprocess.run')
+def test_initialize_git_repo_when_present(mock_run):
+    """Test if Git repo is not initialized again if present."""
+    with patch('os.path.isdir', return_value=True):
+        TransactionHandler()
+        mock_run.assert_not_called()

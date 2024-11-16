@@ -2,9 +2,10 @@ import sys
 import signal
 from codebuddy.command_executor import CommandExecutor
 from codebuddy.config_loader import ConfigLoader, Configuration
-from codebuddy.openai_client import CodeBuddy
+from codebuddy.codebuddy import CodeBuddy
 from codebuddy.file_handler import FileHandler
 from codebuddy.transaction_handler import TransactionHandler
+
 
 class InteractiveShell:
     """
@@ -12,13 +13,12 @@ class InteractiveShell:
     """
 
     def __init__(self, config: Configuration):
-        self.api_key = config.api_key
-        self.instructions = config.instructions
         self.file_handler = FileHandler()
-        self.buddy = CodeBuddy(self.api_key, self.instructions)
+        self.buddy = CodeBuddy(config)
         self.transaction_handler = TransactionHandler()
         self.command_executor = CommandExecutor(config.allow_command_execution)
         self.initial_commit_made = False
+        self.file_contents = {}  # Added to store file contents
 
     def signal_handler(self, sig, frame):
         print("\nExiting shell due to Ctrl+C...")
@@ -35,8 +35,6 @@ class InteractiveShell:
             if query.lower() == 'exit':
                 print("Exiting shell...")
                 break
-            elif query.lower() == 'rollback':
-                self.transaction_handler.rollback()
             else:
                 self.process_query(query)
 
@@ -60,13 +58,13 @@ class InteractiveShell:
 
             for change in response:
                 action = change.get('action')
-                if action == 'modify' or action == 'delete':
-                    self.file_handler.apply_changes_to_project([change])
-                    self.transaction_handler.commit(f"Applied changes for query: {query}")
-                elif action == 'response':
+                if action == 'response':
                     user_response = change.get('message', '')
                     if user_response:
                         print("\033[92m" + "Assistant: " + user_response + "\033[0m")
+                elif action == 'modify' or action == 'delete':
+                    self.file_handler.apply_changes_to_project([change])
+                    self.transaction_handler.commit(f"Applied changes for query: {query}")
                 elif action == 'command':
                     command = change.get('command', '')
                     if command:

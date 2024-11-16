@@ -1,6 +1,7 @@
 import subprocess
 import logging
 
+
 class CommandExecutor:
     def __init__(self, enabled: bool = True) -> None:
         self.enabled = enabled
@@ -13,19 +14,25 @@ class CommandExecutor:
             command (str): The command to execute.
 
         Returns:
-            str: The stdout from the command execution.
+            str: The combined stdout and stderr from the command execution.
 
-        Raises:
-            RuntimeError: If the command execution fails.
+        Note:
+            This method will return both stdout and stderr output,
+            regardless of the command success.
         """
 
         if not self.enabled:
             return "Command execution is not allowed"
-        
-        logging.info(f"Executing command: {command}")
-        result = subprocess.run(command, shell=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        
-        if result.returncode != 0:
-            return f"Command execution failed: {result.stderr}"
 
-        return result.stdout
+        logging.info(f"Executing command: {command}")
+        result = subprocess.run(
+            command, shell=True, text=True, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+
+        return result.stdout + result.stderr
+
+
+if __name__ == "__main__":
+    executor = CommandExecutor()
+    print(executor.run('echo "Test run"'))

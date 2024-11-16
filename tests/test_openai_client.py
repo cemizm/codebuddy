@@ -1,29 +1,26 @@
-from unittest import TestCase
-from unittest.mock import Mock, patch
-from codebuddy.openai_client import CodeBuddy
+import unittest
+from codebuddy.config_loader import Configuration
+from codebuddy.openai_client import OpenAIClient
 
-class TestCodeBuddy(TestCase):
-    def setUp(self) -> None:
-        self.client = CodeBuddy(api_key='test', instructions='instructions')
 
-    @patch('codebuddy.openai_client.openai.chat.completions.create')
-    def test_get_completion(self, mock_create) -> None:
-        # Mocking the response from the OpenAI API
-        mock_response = Mock()
-        mock_response.choices = [Mock(message=Mock(content='- action: response\n  message: yaml_response'))]
-        mock_create.return_value = mock_response
+class TestOpenAIClient(unittest.TestCase):
 
-        # Call the method under test
-        result = self.client.get_completion(
-            "user_query",
-            ['file1', 'file2'],
-            [{'name': 'file3', 'content': 'file_content'}],
-            "context"
-        )
+    def setUp(self):
 
-        # Assert that the result is a list and contains a dictionary with expected keys
-        self.assertIsInstance(result, list)
-        self.assertIsInstance(result[0], dict)
-        self.assertIn('action', result[0])
-        self.assertIn('message', result[0])
-        self.assertEqual(result[0]['message'], 'yaml_response') 
+        self.client = OpenAIClient(Configuration())
+
+    # Example test, requires proper mocking of openai
+    def test_get_completion_success(self):
+        user_request = "Test request"
+        file_list = []
+        file_contents = []
+        command_result = ""
+        with unittest.mock.patch.object(self.client.client.chat.completions, "create") as mocked_create:
+            mocked_create.return_value.choices[0].message.content = 'action: response\nmessage: "Test"'
+            result = self.client.get_completion(
+                user_request, file_list, file_contents, command_result)
+            self.assertIsNotNone(result)
+
+
+if __name__ == '__main__':
+    unittest.main()

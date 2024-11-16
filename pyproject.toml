@@ -28,6 +28,7 @@ codebuddy = "codebuddy.main:main"
 pytest = "^8.3.3"
 pytest-mock = "^3.14.0"
 pytest-cov = "^6.0.0"
+flake8 = "^7.1.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
