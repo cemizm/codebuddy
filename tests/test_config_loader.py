@@ -1,7 +1,7 @@
 import pytest
 import yaml
 from unittest.mock import patch
-from codebuddy.config_loader import ConfigLoader, Configuration
+from pycodebuddy.config_loader import ConfigLoader, Configuration
 
 
 @pytest.fixture

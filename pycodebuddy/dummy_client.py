@@ -1,4 +1,4 @@
-from codebuddy.config_loader import Configuration
+from pycodebuddy.config_loader import Configuration
 from .base_client import BaseClient
 
 

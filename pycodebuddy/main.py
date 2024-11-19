@@ -1,10 +1,10 @@
 import sys
 import signal
-from codebuddy.command_executor import CommandExecutor
-from codebuddy.config_loader import ConfigLoader, Configuration
-from codebuddy.codebuddy import CodeBuddy
-from codebuddy.file_handler import FileHandler
-from codebuddy.transaction_handler import TransactionHandler
+from pycodebuddy.command_executor import CommandExecutor
+from pycodebuddy.config_loader import ConfigLoader, Configuration
+from pycodebuddy.codebuddy import CodeBuddy
+from pycodebuddy.file_handler import FileHandler
+from pycodebuddy.transaction_handler import TransactionHandler
 
 
 class InteractiveShell:
@@ -54,21 +54,25 @@ class InteractiveShell:
             requested_files = []
             command = None
 
-            response = self.buddy.get_completion(query, self.file_handler.list_directory_files(), response_files, cmd_result)
+            response = self.buddy.get_completion(
+                query, self.file_handler.list_directory_files(), response_files, cmd_result)
 
             for change in response:
                 action = change.get('action')
                 if action == 'response':
                     user_response = change.get('message', '')
                     if user_response:
-                        print("\033[92m" + "Assistant: " + user_response + "\033[0m")
+                        print("\033[92m" + "Assistant: " +
+                              user_response + "\033[0m")
                 elif action == 'modify' or action == 'delete':
                     self.file_handler.apply_changes_to_project([change])
-                    self.transaction_handler.commit(f"Applied changes for query: {query}")
+                    self.transaction_handler.commit(
+                        f"Applied changes for query: {query}")
                 elif action == 'command':
                     command = change.get('command', '')
                     if command:
-                        print("\033[91m" + f"Running: '{command}'..." + "\033[0m")
+                        print("\033[91m" +
+                              f"Running: '{command}'..." + "\033[0m")
                         cmd_result = self.command_executor.run(command)
                 elif action == 'request_files':
                     filenames = change.get('filename')
@@ -83,7 +87,9 @@ class InteractiveShell:
 
             response_files = []
             for filename in requested_files:
-                response_files.append({'name': filename, 'content': self.file_handler.get_content(filename)})
+                response_files.append(
+                    {'name': filename, 'content': self.file_handler.get_content(filename)})
+
 
 def main():
     config_loader = ConfigLoader()
@@ -95,6 +101,7 @@ def main():
         shell.process_query(query)
     else:
         shell.run()
+
 
 if __name__ == "__main__":
     main()

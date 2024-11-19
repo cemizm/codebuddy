@@ -1,6 +1,6 @@
 import unittest
-from codebuddy.base_client import BaseClient
-from codebuddy.config_loader import Configuration
+from pycodebuddy.base_client import BaseClient
+from pycodebuddy.config_loader import Configuration
 
 
 class BaseClientTest(BaseClient):

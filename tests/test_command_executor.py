@@ -1,8 +1,9 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from codebuddy.command_executor import CommandExecutor
+from pycodebuddy.command_executor import CommandExecutor
 
-@patch('codebuddy.command_executor.subprocess.run')
+
+@patch('pycodebuddy.command_executor.subprocess.run')
 def test_run_command_failure(mock_run):
     mock_result = MagicMock()
     mock_result.stdout = ""

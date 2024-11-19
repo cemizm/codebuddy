@@ -1,6 +1,6 @@
 import unittest
-from codebuddy.config_loader import Configuration
-from codebuddy.openai_client import OpenAIClient
+from pycodebuddy.config_loader import Configuration
+from pycodebuddy.openai_client import OpenAIClient
 
 
 class TestOpenAIClient(unittest.TestCase):
