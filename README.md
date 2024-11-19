@@ -7,6 +7,7 @@ Codebuddy is an advanced command-line tool designed for executing user queries u
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Configuration](#configuration)
 - [Architecture](#architecture)
 - [Dependencies](#dependencies)
 - [Development](#development)
@@ -25,28 +26,59 @@ Codebuddy is an advanced command-line tool designed for executing user queries u
 Codebuddy requires Python 3.8 or later. Install using Poetry with:
 
 ```bash
-poetry install
+pip install pycodebuddy
 ```
 
 ## Usage
 
-Enter the interactive shell or execute direct queries via:
+Enter the interactive shell ...
 
 ```bash
-poetry shell
+$ codebuddy
+$ Entering interactive shell. Type 'exit' to exit or use Ctrl+C to abort.
+$ User:
+```
+
+... or execute direct queries via:
+
+```bash
 codebuddy "<your request here>"
 ```
 
-Ensure your OpenAI API key is configured as an environment variable.
+Ensure your OpenAI API key is configured in the config.yaml.
+
+## Configuration
+
+Codebuddy uses a configuration file for setting various parameters. This can be found at `.user_config.yaml` in the user's home directory, but it can be overridden by a `config.yaml` located in the project's root directory. Below are the configuration parameters:
+
+- **api_key**: The API key for authentication (e.g., OpenAI). Default is 'api-key'.
+- **instructions**: Additional instructions or notes used within to prepare the chat bot for his task.
+- **allow_command_execution**: Boolean flag for allowing/disallowing command execution. Default is `False`.
+- **client_type**: The type of client, like 'openai'. Default is 'openai'.
+- **base_url**: Optional base URL for the openai backend to use. useful to run local models.
+- **history_size**: Size of the history to maintain. Default is 10.
+- **model**: The specified model to use, such as 'gpt-4o'.
+
+Example `config.yaml` file:
+```yaml
+api_key: 'your-api-key-here'
+instructions: 'additional setup instructions'
+allow_command_execution: true
+client_type: 'openai'
+base_url: 'http://localhost:11434/v1' # to use ollama
+history_size: 10
+model: 'gpt-4o'
+```
 
 ## Architecture
 
-Codebuddy features a robust, modular architecture:
-- `main.py`: Serves as the entry point for the interactive shell and direct query execution.
-- `openai_client.py`: Manages integration with the OpenAI API to process user queries and generate actionable responses.
-- `file_handler.py`: Handles dynamic file operations and manages project files.
-- `command_executor.py`: Facilitates execution of system commands with necessary checks.
-- `transaction_handler.py`: Provides Git-based transaction management to aid in safe rollbacks.
+Codebuddy's architecture is modular and comprises the following components:
+- `main.py`: The entry point for the interactive shell and query execution.
+- `openai_client.py`: Manages API integration with OpenAI for query processing.
+- `file_handler.py`: Oversees file operations, including file management.
+- `command_executor.py`: Responsible for executing system commands securely.
+- `config_loader.py`: Loads configuration parameters from the YAML files.
+- `transaction_handler.py`: Utilizes Git for safe rollbacks and transaction management.
 
 ## Dependencies
 
