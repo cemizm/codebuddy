@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "codebuddy"
-version = "1.0.0"
+version = "0.0.1"
 description = "A command-line tool leveraging OpenAI's GPT for intelligent project management within a Git-integrated shell."
 authors = ["Cem Basoglu <cem.basoglu@web.de>"]
 license = "MIT"
